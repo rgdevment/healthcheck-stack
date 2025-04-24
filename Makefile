@@ -3,6 +3,7 @@ ENV_FILE=.env
 ENV_EXAMPLE=.env.example
 SERVICE_ENV=healthcheck-api/.env
 TUNNEL_STATUS=https://status.apirest.cl/
+STACK_NAME := internal-net
 
 # === ENVIRONMENT ===
 # Sync root .env with example and copy to healthcheck-api
@@ -49,6 +50,9 @@ verify-env:
 	@echo "🔎 Verifying .env sync with $(SERVICE_ENV)..."
 	@cmp --silent $(ENV_FILE) $(SERVICE_ENV) && echo "✅ Files are identical" || echo "❌ Differences found"
 
+ensure-network:
+	docker network inspect $(STACK_NAME) >/dev/null 2>&1 || docker network create $(STACK_NAME)
+
 # Full stack setup (env + up + status)
 stack:
-	make sync-env && make up && make status
+	make sync-env && make ensure-network && make up && make status

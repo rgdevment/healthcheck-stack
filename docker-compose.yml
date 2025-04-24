@@ -90,4 +90,4 @@ volumes:
 
 networks:
   internal-net:
-    driver: bridge
+    external: true
