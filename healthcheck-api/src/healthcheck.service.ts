@@ -1,11 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import * as mongoose from 'mongoose';
 import * as redis from 'redis';
 import axios from 'axios';
 
 @Injectable()
 export class HealthcheckService {
-  @Inject('MARIADB_POOL') private readonly pool;
+  @Inject('MARIADB_POOL') private readonly pool: { getConnection: () => any; end: () => any; };
 
   async getPing() {
     return {
@@ -17,17 +16,6 @@ export class HealthcheckService {
 
   getTime() {
     return { now: new Date().toString() };
-  }
-
-  async checkMongo() {
-    try {
-      const conn = await mongoose.connect(process.env.MONGO_URI);
-      const isConnected = conn.connection.readyState === 1;
-      await conn.disconnect();
-      return { mongo: isConnected ? 'ok' : 'not connected' };
-    } catch {
-      return { mongo: 'error' };
-    }
   }
 
   async checkMySQL() {

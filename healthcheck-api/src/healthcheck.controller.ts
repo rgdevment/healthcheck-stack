@@ -7,8 +7,7 @@ export class HealthcheckController {
 
   @Get()
   async getRootStatus() {
-    const [mongo, mysql, redis, grafana] = await Promise.all([
-      this.checkMongo(),
+    const [mysql, redis, grafana] = await Promise.all([
       this.checkMySQL(),
       this.checkRedis(),
       this.checkGrafana(),
@@ -18,7 +17,6 @@ export class HealthcheckController {
       status: 'ok',
       timestamp: new Date().toISOString(),
       services: {
-        ...mongo,
         ...mysql,
         ...redis,
         ...grafana,
@@ -34,11 +32,6 @@ export class HealthcheckController {
   @Get('/time')
   time() {
     return this.service.getTime();
-  }
-
-  @Get('/ping/mongo')
-  checkMongo() {
-    return this.service.checkMongo();
   }
 
   @Get('/ping/db')

@@ -16,22 +16,11 @@ services:
     networks:
       - internal-net
     depends_on:
-      - mongo-db
       - mariadb
       - redis
       - grafana
     expose:
       - 3000
-
-  mongo-db:
-    image: mongo:6.0
-    platform: linux/arm64
-    container_name: mongo-db
-    restart: unless-stopped
-    volumes:
-      - mongodb-data:/data/db
-    networks:
-      - internal-net
 
   mariadb:
     image: mariadb:10.6
