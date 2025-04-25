@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { HealthcheckController } from './healthcheck.controller';
-import { HealthcheckService } from './healthcheck.service';
+import { HealthcheckController } from './controllers/healthcheck.controller';
+import { HealthcheckService } from './services/healthcheck.service';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { Registry, collectDefaultMetrics } from 'prom-client';
-import { MetricsController } from './metrics.controller';
-import { dbProvider } from './db.provider';
+import { MetricsController } from './controllers/metrics.controller';
+import {MariaDBService} from "./services/mariadb.service";
 
 @Module({
   imports: [
@@ -15,6 +15,7 @@ import { dbProvider } from './db.provider';
   controllers: [HealthcheckController, MetricsController],
   providers: [
     HealthcheckService,
+    MariaDBService,
     {
       provide: 'PrometheusRegistry',
       useValue: (() => {
@@ -23,7 +24,6 @@ import { dbProvider } from './db.provider';
         return registry;
       })(),
     },
-    dbProvider,
   ],
 })
 export class AppModule {}

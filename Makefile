@@ -25,7 +25,7 @@ down:
 
 restart-api:
 	@echo "🔄 Restarting healthcheck-api..."
-	docker compose restart healthcheck-api
+	docker compose restart mariadb healthcheck-api
 
 clean:
 	@echo "🧹 Cleaning Docker system..."
@@ -98,6 +98,18 @@ reset-all-apps:
 	@for app in $(APPS); do \
 		$(MAKE) reset-app-$$app; \
 	done
+
+# === ADMINER ===
+adminer:
+	@echo "🧪 Starting Adminer on http://localhost:8080"
+	docker run -d --rm \
+		--name adminer \
+		--network internal-net \
+		-p 8080:8080 adminer
+
+adminer-down:
+	@echo "🧹 Stopping Adminer..."
+	docker rm -f adminer
 
 # === FULL STACK ===
 stack:

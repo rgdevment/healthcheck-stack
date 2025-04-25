@@ -1,10 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import * as redis from 'redis';
 import axios from 'axios';
+import {MariaDBService} from "./mariadb.service";
 
 @Injectable()
 export class HealthcheckService {
-  @Inject('MARIADB_POOL') private readonly pool: { getConnection: () => any; end: () => any; };
+  constructor(private readonly mariadbService: MariaDBService) {}
 
   async getPing() {
     return {
@@ -20,16 +21,16 @@ export class HealthcheckService {
 
   async checkMySQL() {
     try {
-      const conn = await this.pool.getConnection();
+      const conn = await this.mariadbService.getConnection();
       await conn.query('SELECT 1');
-      conn.release();
-      await this.pool.end();
+      await conn.release();
       return { mysql: 'ok' };
     } catch (err) {
       console.error('MySQL ERROR:', err);
       return { mysql: 'error' };
     }
   }
+
   async checkRedis() {
     try {
       const client = redis.createClient({
