@@ -5,13 +5,10 @@ import { HealthcheckService } from './services/healthcheck.service';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { Registry, collectDefaultMetrics } from 'prom-client';
 import { MetricsController } from './controllers/metrics.controller';
-import {MariaDBService} from "./services/mariadb.service";
+import { MariaDBService } from './services/mariadb.service';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    PrometheusModule.register(),
-  ],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), PrometheusModule.register()],
   controllers: [HealthcheckController, MetricsController],
   providers: [
     HealthcheckService,

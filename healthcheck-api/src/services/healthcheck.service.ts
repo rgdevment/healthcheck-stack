@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as redis from 'redis';
 import axios from 'axios';
-import {MariaDBService} from "./mariadb.service";
+import { MariaDBService } from './mariadb.service';
 
 @Injectable()
 export class HealthcheckService {

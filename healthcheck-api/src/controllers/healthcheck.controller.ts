@@ -7,11 +7,7 @@ export class HealthcheckController {
 
   @Get()
   async getRootStatus() {
-    const [mysql, redis, grafana] = await Promise.all([
-      this.checkMySQL(),
-      this.checkRedis(),
-      this.checkGrafana(),
-    ]);
+    const [mysql, redis, grafana] = await Promise.all([this.checkMySQL(), this.checkRedis(), this.checkGrafana()]);
 
     return {
       status: 'ok',
