@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import * as redis from 'redis';
 import axios from 'axios';
-import { MariaDBService } from './mariadb.service';
+import { MariaDBService } from './mariadb.service.js';
 
 @Injectable()
 export class HealthcheckService {
   constructor(private readonly mariadbService: MariaDBService) {}
 
-  async getPing() {
+  getPing() {
     return {
       status: 'ok',
       message: 'pong',
@@ -35,8 +35,8 @@ export class HealthcheckService {
     try {
       const client = redis.createClient({
         socket: {
-          host: process.env.REDIS_HOST,
-          port: parseInt(process.env.REDIS_PORT),
+          host: process.env.REDIS_HOST || 'localhost',
+          port: parseInt(process.env.REDIS_PORT || '6379'),
         },
       });
       await client.connect();

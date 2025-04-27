@@ -1,34 +1,40 @@
 # -----------------------
-# STAGE 1: Build NestJS App (with full deps)
+# STAGE 1: Build NestJS App (full deps)
 # -----------------------
-FROM --platform=linux/arm64 node:22-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy dependency definitions and install everything (dev included for build)
-COPY package*.json ./
-RUN npm install
+# Install pnpm
+RUN npm install -g pnpm
 
-# Copy source code and build
+# Copy dependency definitions and install deps
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+# Copy all source code and build
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 # -----------------------
-# STAGE 2: Runtime (lightweight production image)
+# STAGE 2: Runtime (production minimal image)
 # -----------------------
-FROM --platform=linux/arm64 node:22-alpine AS runner
+FROM node:22-alpine AS runner
 
 # Use non-root user for security
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
-# Copy only what we need from builder
+# Install pnpm runtime only (for pnpm node_modules layout)
+RUN npm install -g pnpm
+
+# Copy only what is needed
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
-# Permissions and env
+# Set permissions
 RUN chown -R appuser:appgroup /app
 USER appuser
 

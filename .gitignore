@@ -1,8 +1,69 @@
-.env
-.env.local
-!.env.example
-node_modules
-dist
+# ===========================
+# OS / Editor / System Files
+# ===========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
 *.log
+
+# ===========================
+# Node / NestJS
+# ===========================
+node_modules/
+dist/
+coverage/
+.nyc_output/
+.pnpm-debug.log
+pnpm-debug.log
+
+# ===========================
+# Dotenv environment files
+# ===========================
+.env
+.env.*
+!.env.example
+
+# ===========================
+# VSCode
+# ===========================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ===========================
+# IntelliJ / Jetbrains
+# ===========================
+.idea/
+*.iml
+
+# ===========================
+# Temporary and Backup files
+# ===========================
+.temp
+.tmp
+*.swp
+*.bak
+*.tmp
+*.backup
+*.old
+
+# ===========================
+# Docker / DevOps
+# ===========================
+docker-compose.override.yml
+!docker-compose.dev.yml
+
+# ===========================
+# Process ID and Reports
+# ===========================
+pids/
+*.pid
+*.seed
+*.pid.lock
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+#Backup files
 backups/
 apps/

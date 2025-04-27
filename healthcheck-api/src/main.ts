@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from './app.module.js';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
@@ -9,4 +9,4 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`🚀 Healthcheck API running at http://localhost:${port}`);
 }
-bootstrap().then();
+void bootstrap();

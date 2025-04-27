@@ -1,10 +1,10 @@
 services:
   healthcheck-api:
     build: ./healthcheck-api
-    platform: linux/arm64
     container_name: healthcheck-api
     restart: unless-stopped
     environment:
+      - NODE_ENV=production
       - MYSQL_HOST=${MYSQL_HOST}
       - MYSQL_PORT=${MYSQL_PORT}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
@@ -20,12 +20,17 @@ services:
       - grafana
     expose:
       - 3000
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   mariadb:
     image: mariadb:10.6
-    platform: linux/arm64
     container_name: mariadb
     restart: unless-stopped
+    command: --skip-name-resolve --max_allowed_packet=64M
     environment:
       - MYSQL_HOST=${MYSQL_HOST}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
@@ -35,18 +40,26 @@ services:
       - mariadb-data:/var/lib/mysql
     networks:
       - internal-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   redis:
     image: redis:7-alpine
-    platform: linux/arm64
     container_name: redis
     restart: unless-stopped
     networks:
       - internal-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   grafana:
     image: grafana/grafana
-    platform: linux/arm64
     container_name: grafana
     restart: unless-stopped
     environment:
@@ -59,10 +72,17 @@ services:
       - internal-net
     expose:
       - 3000
+    read_only: true
+    tmpfs:
+      - /tmp
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   prometheus:
     image: prom/prometheus
-    platform: linux/arm64
     container_name: prometheus
     restart: unless-stopped
     volumes:
@@ -70,6 +90,11 @@ services:
       - prometheus-data:/prometheus
     networks:
       - internal-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   cloudflared:
     image: cloudflare/cloudflared:latest
@@ -80,6 +105,11 @@ services:
       - TUNNEL_TOKEN=${CLOUD_FLARE_TUNNEL_TOKEN}
     networks:
       - internal-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   mongodb-data:

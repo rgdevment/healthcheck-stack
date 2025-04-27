@@ -3,7 +3,7 @@ import * as mariadb from 'mariadb';
 
 @Injectable()
 export class MariaDBService implements OnModuleInit, OnModuleDestroy {
-  private pool: mariadb.Pool;
+  private pool!: mariadb.Pool;
 
   async onModuleInit() {
     this.pool = mariadb.createPool({

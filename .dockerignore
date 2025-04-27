@@ -1,0 +1,42 @@
+# Node modules and build output
+node_modules
+dist
+coverage
+.nyc_output
+
+# Logs
+*.log
+pnpm-debug.log
+.pnpm-debug.log
+
+# Docker / Dev
+healthcheck-api/Dockerfile
+docker-compose.yml
+docker-compose.dev.yml
+docker-compose.override.yml
+
+# Configs and system files
+.env
+.env.*
+!.env.example
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Temporary files
+.temp
+.tmp
+*.swp
+*.bak
+*.old
+*.tmp
+*.backup
+
+# Git
+.git
+.gitignore
+
+
+!package.json
+!pnpm-lock.yaml
