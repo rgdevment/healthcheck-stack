@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as mariadb from 'mariadb';
-import {AppLogger} from "@common/logger/logger.service";
+import { AppLogger } from '@common/logger/logger.service.js';
 
 @Injectable()
 export class MariaDBService implements OnModuleInit, OnModuleDestroy {

@@ -2,11 +2,14 @@ import { Injectable } from '@nestjs/common';
 import * as redis from 'redis';
 import axios from 'axios';
 import { MariaDBService } from './mariadb.service.js';
-import {AppLogger} from "@common/logger/logger.service.js";
+import { AppLogger } from '@common/logger/logger.service.js';
 
 @Injectable()
 export class HealthcheckService {
-  constructor(private readonly mariadbService: MariaDBService, private readonly logger: AppLogger) {
+  constructor(
+    private readonly mariadbService: MariaDBService,
+    private readonly logger: AppLogger,
+  ) {
     this.logger.setContext('HealthcheckService');
   }
 

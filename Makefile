@@ -40,6 +40,9 @@ clean:
 	@echo "🧹 Cleaning Docker system..."
 	docker system prune -af --volumes
 
+logs:
+	docker logs -f healthcheck-api
+
 # === STATUS & MONITORING ===
 status:
 	@echo "📋 Docker container status:"
@@ -68,7 +71,6 @@ adminer-down:
 # === FULL STACK ===
 stack:
 	make sync-env
-	make shared-libs
 	make ensure-network
 	make up
 	make status
@@ -78,4 +80,4 @@ restart-stack:
 	$(MAKE) restart-api
 	$(MAKE) status
 
-.PHONY: sync-env shared-libs ensure-network up down restart-api clean status check verify-env stack restart-stack adminer adminer-down
+.PHONY: sync-env shared-libs ensure-network up down restart-api clean status check verify-env stack restart-stack adminer adminer-down logs
