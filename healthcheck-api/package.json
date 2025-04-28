@@ -1,7 +1,7 @@
 {
   "name": "healthcheck-api",
   "type": "module",
-  "packageManager": "pnpm@10.9.0",
+  "packageManager": "pnpm@10.10.0",
   "version": "1.0.0",
   "description": "System-wide health check API for apirest.cl",
   "main": "dist/main.js",
@@ -10,7 +10,7 @@
   "license": "MIT License",
   "engines": {
     "node": ">=22.0.0",
-    "pnpm": ">=10.9.0"
+    "pnpm": ">=10.10.0"
   },
   "scripts": {
     "start": "node dist/main",
@@ -18,7 +18,8 @@
     "build": "nest build",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "preinstall": "npx only-allow pnpm"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.0",
@@ -43,6 +44,7 @@
     "eslint": "^9.25.1",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
+    "only-allow": "^1.2.1",
     "prettier": "^3.5.3",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

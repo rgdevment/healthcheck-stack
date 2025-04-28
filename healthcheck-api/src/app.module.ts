@@ -2,25 +2,18 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { HealthcheckController } from './controllers/healthcheck.controller.js';
 import { HealthcheckService } from './services/healthcheck.service.js';
-import { PrometheusModule } from '@willsoto/nestjs-prometheus';
-import { Registry, collectDefaultMetrics } from 'prom-client';
 import { MetricsController } from './controllers/metrics.controller.js';
 import { MariaDBService } from './services/mariadb.service.js';
+import {LoggerModule} from "@common/logger/logger.module";
+import {PrometheusModule} from "@common/prometheus/prometheus.module";
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrometheusModule.register()],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), LoggerModule],
   controllers: [HealthcheckController, MetricsController],
   providers: [
     HealthcheckService,
     MariaDBService,
-    {
-      provide: 'PrometheusRegistry',
-      useValue: (() => {
-        const registry = new Registry();
-        collectDefaultMetrics({ register: registry });
-        return registry;
-      })(),
-    },
+    PrometheusModule,
   ],
 })
 export class AppModule {}

@@ -13,7 +13,7 @@
     "esModuleInterop": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "src",
+    "rootDir": "./src",
     "baseUrl": "./",
     "paths": {
       "@modules/*": ["src/modules/*"],

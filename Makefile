@@ -1,110 +1,64 @@
 # === Global Variables ===
-ENV_FILE=.env
-ENV_EXAMPLE=.env.example
-SERVICE_ENV=healthcheck-api/.env
-TUNNEL_STATUS=https://status.apirest.cl/
-STACK_NAME := internal-net
-APPS_DIR := apps
-APPS := $(shell find $(APPS_DIR) -maxdepth 1 -mindepth 1 -type d -exec basename {} \;)
+ENV_FILE = .env
+ENV_EXAMPLE = .env.example
+SERVICE_ENV = healthcheck-api/.env
+STACK_NAME = internal-net
+SHARED_LIBS_DIR = shared-libs
 
 # === ENVIRONMENT ===
 sync-env:
 	@echo "📦 Syncing .env environment..."
 	@test -f $(ENV_FILE) || (echo "⚠️  $(ENV_FILE) not found, creating from example"; cp $(ENV_EXAMPLE) $(ENV_FILE))
 	@cp $(ENV_FILE) $(SERVICE_ENV)
-	@echo "✅ Copied $(ENV_FILE) → $(SERVICE_ENV)"
+	@echo "✅ Environment ready."
 
-# === DOCKER ===
+shared-libs:
+	@echo "📦 Compiling shared libraries under $(SHARED_LIBS_DIR)/ ..."
+	@for lib in $$(find $(SHARED_LIBS_DIR) -mindepth 1 -maxdepth 1 -type d); do \
+		echo "🔧 Building $$lib..."; \
+		cd $$lib && pnpm install --frozen-lockfile && pnpm run build && cd - >/dev/null; \
+	done
+	@echo "✅ Shared libraries compiled successfully!"
+
+# === DOCKER INFRASTRUCTURE ===
+ensure-network:
+	docker network inspect $(STACK_NAME) >/dev/null 2>&1 || docker network create $(STACK_NAME)
+
 up:
-	@echo "🚀 Starting base stack..."
+	@echo "🚀 Starting infrastructure stack..."
 	docker compose up -d --build
 
 down:
-	@echo "💥 Stopping base stack..."
+	@echo "💥 Stopping infrastructure stack..."
 	docker compose down -v
 
 restart-api:
-	@echo "🔄 Restarting healthcheck-api..."
+	@echo "🔄 Restarting healthcheck-api and mariadb..."
 	docker compose restart mariadb healthcheck-api
 
 clean:
 	@echo "🧹 Cleaning Docker system..."
 	docker system prune -af --volumes
 
-ensure-network:
-	docker network inspect $(STACK_NAME) >/dev/null 2>&1 || docker network create $(STACK_NAME)
-
 # === STATUS & MONITORING ===
 status:
 	@echo "📋 Docker container status:"
-	docker ps --format "table {{.Names}}\t{{.Status}}" | grep -E "$(STACK_NAME)|$(APPS)" || true
+	docker ps --format "table {{.Names}}\t{{.Status}}" | grep -E "healthcheck-api|mariadb|redis|grafana|prometheus|cloudflared" || true
 
 check:
-	@echo "🔎 Checking $(TUNNEL_STATUS)"
-	curl -s $(TUNNEL_STATUS) | jq || curl -s $(TUNNEL_STATUS)
+	@echo "🔎 Checking health endpoint..."
+	curl -s https://status.apirest.cl/ | jq || curl -s https://status.apirest.cl/
 
 verify-env:
-	@echo "🔍 Comparing root .env with $(SERVICE_ENV)..."
+	@echo "🔍 Comparing .env files..."
 	@cmp --silent $(ENV_FILE) $(SERVICE_ENV) && echo "✅ No differences" || echo "❌ Files differ"
 
-# === APP TARGETS (Dynamic) ===
-up-app-%:
-	@echo "🚀 Starting app '$*'..."
-	cd $(APPS_DIR)/$* && docker compose up -d --build
-
-down-app-%:
-	@echo "🛑 Stopping app '$*'..."
-	cd $(APPS_DIR)/$* && docker compose down
-
-logs-app-%:
-	@echo "📄 Logs for app '$*'..."
-	docker logs -f $*
-
-restart-app-%:
-	@echo "🔄 Restarting app '$*'..."
-	cd $(APPS_DIR)/$* && docker compose restart
-
-rebuild-app-%:
-	@echo "🔧 Rebuilding app '$*'..."
-	cd $(APPS_DIR)/$* && docker compose up -d --build
-
-reset-app-%:
-	@echo "💥 Resetting app '$*'..."
-	cd $(APPS_DIR)/$* && docker compose rm -fs || true
-	cd $(APPS_DIR)/$* && docker compose up -d --build
-
-# === BULK APP ACTIONS ===
-up-all-apps:
-	@for app in $(APPS); do \
-		$(MAKE) up-app-$$app; \
-	done
-
-down-all-apps:
-	@for app in $(APPS); do \
-		$(MAKE) down-app-$$app; \
-	done
-
-restart-all-apps:
-	@for app in $(APPS); do \
-		$(MAKE) restart-app-$$app; \
-	done
-
-rebuild-all-apps:
-	@for app in $(APPS); do \
-		$(MAKE) rebuild-app-$$app; \
-	done
-
-reset-all-apps:
-	@for app in $(APPS); do \
-		$(MAKE) reset-app-$$app; \
-	done
-
-# === ADMINER ===
+# === OPTIONAL ADMINER ===
 adminer:
-	@echo "🧪 Starting Adminer on http://localhost:8080"
+	@echo "🧪 Starting Adminer at http://localhost:8080"
 	docker run -d --rm \
 		--name adminer \
-		--network internal-net \
+		--network $(STACK_NAME) \
 		-p 8080:8080 adminer
 
 adminer-down:
@@ -113,12 +67,15 @@ adminer-down:
 
 # === FULL STACK ===
 stack:
-	make sync-env && make ensure-network && make up && make up-all-apps && make status
+	make sync-env
+	make shared-libs
+	make ensure-network
+	make up
+	make status
 
 restart-stack:
-	@echo "♻️  Restarting full stack (infra + apps)..."
+	@echo "♻️  Restarting infrastructure stack..."
 	$(MAKE) restart-api
-	@for app in $(APPS); do \
-		$(MAKE) restart-app-$$app; \
-	done
 	$(MAKE) status
+
+.PHONY: sync-env shared-libs ensure-network up down restart-api clean status check verify-env stack restart-stack adminer adminer-down

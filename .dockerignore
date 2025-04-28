@@ -1,42 +1,45 @@
-# Node modules and build output
-node_modules
-dist
-coverage
-.nyc_output
+# Root node_modules and build outputs
+node_modules/
+dist/
+coverage/
+.nyc_output/
+pnpm-lock.yaml
 
-# Logs
-*.log
-pnpm-debug.log
-.pnpm-debug.log
+# Git
+.git/
+.gitignore
 
-# Docker / Dev
-healthcheck-api/Dockerfile
-docker-compose.yml
-docker-compose.dev.yml
-docker-compose.override.yml
-
-# Configs and system files
-.env
-.env.*
-!.env.example
-.vscode
-.idea
+# IDEs and System Files
+.vscode/
+.idea/
 .DS_Store
 Thumbs.db
 
+# Environments
+.env
+.env.*
+!.env.example
+
+# Docker itself
+docker-compose.yml
+docker-compose.override.yml
+docker-compose.dev.yml
+Dockerfile
+healthcheck-api/Dockerfile
+
 # Temporary files
-.temp
-.tmp
+.temp/
+.tmp/
 *.swp
 *.bak
 *.old
 *.tmp
 *.backup
 
-# Git
-.git
-.gitignore
-
-
-!package.json
-!pnpm-lock.yaml
+# Specific: Ignore node_modules inside subprojects
+healthcheck-api/node_modules/
+healthcheck-api/dist/
+apps/*/node_modules/
+apps/*/dist/
+shared-libs/*/node_modules/
+shared-libs/*/dist/

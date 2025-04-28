@@ -1,9 +1,14 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import * as mariadb from 'mariadb';
+import {AppLogger} from "@common/logger/logger.service";
 
 @Injectable()
 export class MariaDBService implements OnModuleInit, OnModuleDestroy {
   private pool!: mariadb.Pool;
+
+  constructor(private readonly logger: AppLogger) {
+    this.logger.setContext('MariaDBService');
+  }
 
   async onModuleInit() {
     this.pool = mariadb.createPool({
@@ -33,6 +38,7 @@ export class MariaDBService implements OnModuleInit, OnModuleDestroy {
 
   async getConnection() {
     if (!this.pool || this.pool.closed) {
+      this.logger.error('MySQL ERROR', 'MariaDB pool is not initialized or already closed');
       throw new Error('MariaDB pool is not initialized or already closed');
     }
     return this.pool.getConnection();
