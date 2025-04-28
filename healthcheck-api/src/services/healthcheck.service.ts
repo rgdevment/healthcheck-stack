@@ -21,6 +21,30 @@ export class HealthcheckService {
     };
   }
 
+  async checkExternalDependencies(): Promise<Record<string, 'ok' | 'error'>> {
+    const dependencies: Record<string, 'ok' | 'error'> = {};
+
+    const urls = {
+      retrieveCountries: process.env.EXTERNAL_API_RETRIEVE_COUNTRIES,
+      indicadoresChile: process.env.EXTERNAL_API_INDICADORES_CHILE,
+    };
+
+    for (const [name, url] of Object.entries(urls)) {
+      try {
+        const res = await axios.get(url, { timeout: 5000 });
+        if (res.status === 200 && res.data?.status === 'ok') {
+          dependencies[name] = 'ok';
+        } else {
+          dependencies[name] = 'error';
+        }
+      } catch (error) {
+        dependencies[name] = 'error';
+      }
+    }
+
+    return dependencies;
+  }
+
   getTime() {
     return { now: new Date().toString() };
   }
