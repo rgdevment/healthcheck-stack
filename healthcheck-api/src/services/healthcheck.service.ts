@@ -25,8 +25,8 @@ export class HealthcheckService {
     const dependencies: Record<string, 'ok' | 'error'> = {};
 
     const urls = {
-      retrieveCountries: process.env.EXTERNAL_API_RETRIEVE_COUNTRIES,
-      indicadoresChile: process.env.EXTERNAL_API_INDICADORES_CHILE,
+      retrieveCountries: process.env.EXTERNAL_API_RETRIEVE_COUNTRIES || '',
+      indicadoresChile: process.env.EXTERNAL_API_INDICADORES_CHILE || '',
     };
 
     for (const [name, url] of Object.entries(urls)) {
