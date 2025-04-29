@@ -14,6 +14,8 @@ services:
       - GRAFANA_URL=http://grafana:3000
     networks:
       - internal-net
+    env_file:
+      - .env
     depends_on:
       - mariadb
       - redis
@@ -40,7 +42,7 @@ services:
         max-file: "3"
 
   mariadb:
-    image: mariadb:10.6
+    image: mariadb:11.7.2
     container_name: mariadb
     restart: unless-stopped
     command: >

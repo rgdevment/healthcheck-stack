@@ -25,19 +25,31 @@ export class HealthcheckService {
     const dependencies: Record<string, 'ok' | 'error'> = {};
 
     const urls = {
-      retrieveCountries: process.env.EXTERNAL_API_RETRIEVE_COUNTRIES || '',
-      indicadoresChile: process.env.EXTERNAL_API_INDICADORES_CHILE || '',
+      retrieveCountries: process.env.API_RETRIEVE_COUNTRIES || '',
+      indicadoresChile: process.env.API_INDICADORES_CHILE || '',
     };
+
+    this.logger.log(`URLs a consultar: ${urls.retrieveCountries}`);
+    this.logger.log(`URLs a consultar: ${urls.indicadoresChile}`);
 
     for (const [name, url] of Object.entries(urls)) {
       try {
+        if (!url) {
+          this.logger.error(`No URL configured for ${name}`);
+          dependencies[name] = 'error';
+          continue;
+        }
+
         const res = await axios.get(url, { timeout: 5000 });
+
         if (res.status === 200 && res.data?.status === 'ok') {
           dependencies[name] = 'ok';
         } else {
           dependencies[name] = 'error';
         }
       } catch (error) {
+        // @ts-ignore
+        this.logger.error(`Error checking ${name}:`, error.message || error);
         dependencies[name] = 'error';
       }
     }
