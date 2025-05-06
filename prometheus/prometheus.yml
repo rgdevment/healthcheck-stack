@@ -2,12 +2,14 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'healthcheck'
-    static_configs:
-      - targets: ['healthcheck-api:3000']
   - job_name: 'countries'
     static_configs:
       - targets: ['retrieve-countries:3000']
+
   - job_name: 'indicadores'
     static_configs:
-      - targets: [' indicadores-chile:3000']
+      - targets: ['indicadores-chile:3000']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']

@@ -3,11 +3,19 @@ set -euo pipefail
 
 # === Configuration ===
 TIMESTAMP=$(date +"%Y-%m-%d-%H%M")
-LOCAL_BACKUP="./backups/${TIMESTAMP}"
+LOCAL_BACKUP="/opt/backups/${TIMESTAMP}"
 GDRIVE_REMOTE="gdrive"
 GDRIVE_FOLDER="Backups/system/apirest-health"
 
 echo "🔄 Starting backup: ${TIMESTAMP}"
+
+# === Ensure containers are running ===
+for SERVICE in mariadb redis grafana; do
+  if ! docker inspect -f '{{.State.Running}}' "$SERVICE" 2>/dev/null | grep -q true; then
+    echo "❌ Docker container $SERVICE is not running. Aborting."
+    exit 1
+  fi
+done
 
 # === Create local backup directory ===
 mkdir -p "${LOCAL_BACKUP}"
@@ -28,5 +36,8 @@ docker cp grafana:/var/lib/grafana "${LOCAL_BACKUP}/grafana"
 # === Upload to Google Drive using rclone ===
 echo "☁️ Uploading to Google Drive (${GDRIVE_FOLDER})..."
 rclone copy "${LOCAL_BACKUP}" "${GDRIVE_REMOTE}:${GDRIVE_FOLDER}/${TIMESTAMP}" --quiet
+
+# === Optional: Cleanup old local backups (15+ days) ===
+find /opt/backups -type d -mtime +15 -exec rm -rf {} \;
 
 echo "✅ Backup completed and uploaded!"
