@@ -4,6 +4,14 @@ ENV_EXAMPLE = .env.example
 STACK_NAME = internal-net
 SHARED_LIBS_DIR = shared-libs
 
+# === MYSQL EXPORTER FILES ===
+init-secrets:
+	@echo "🔐 Generando archivos de configuración reales desde variables .env..."
+	@set -a && source .env && set +a && \
+	envsubst '$$MYSQL_EXPORTER_PASSWORD' < mariadb/init/01-exporter-user.sql.example > mariadb/init/01-exporter-user.sql && \
+	envsubst '$$MYSQL_EXPORTER_PASSWORD' < mariadb/mysqld_exporter.cnf.example > mariadb/mysqld_exporter.cnf
+	@echo "✅ Archivos reales generados con variables sustituidas."
+
 # === ENVIRONMENT ===
 sync-env:
 	@echo "📦 Syncing environment..."
@@ -50,21 +58,22 @@ status:
 	@echo "📋 Docker container status:"
 	docker ps --format "table {{.Names}}\t{{.Status}}" | grep -E "mariadb|redis|grafana|prometheus|cloudflared" || true
 
-# === OPTIONAL: Adminer ===
+# === Adminer (uso opcional de emergencia) ===
 adminer:
-	@echo "🧪 Starting Adminer at http://localhost:8080"
-	docker run -d --rm \
-		--name adminer \
-		--network $(STACK_NAME) \
-		-p 8080:8080 adminer
+	@echo "🚀 Levantando Adminer en background (http://localhost:8080)..."
+	docker compose up -d adminer
+	@echo "✅ Adminer disponible en red interna, puerto 8080 (según tu red o túnel Cloudflare)"
 
-adminer-down:
-	@echo "🧹 Stopping Adminer..."
-	docker rm -f adminer
+down-adminer:
+	@echo "🛑 Deteniendo y eliminando Adminer..."
+	docker compose stop adminer
+	docker compose rm -f adminer
+	@echo "✅ Adminer detenido y eliminado"
 
 # === COMPOSITE TARGETS ===
 stack:
 	@$(MAKE) sync-env
+	@$(MAKE) init-secrets
 	@$(MAKE) ensure-network
 	@$(MAKE) up
 	@$(MAKE) status

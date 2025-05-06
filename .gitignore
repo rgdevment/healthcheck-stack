@@ -64,6 +64,14 @@ pids/
 *.pid.lock
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
-#Backup files
+# ===========================
+# Database
+# ===========================
+mariadb/init/01-exporter-user.sql
+mariadb/mysqld_exporter.cnf
+
+# ===========================
+# Miscellaneous
+# ===========================
 backups/
 apps/

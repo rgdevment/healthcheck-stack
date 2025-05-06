@@ -11,10 +11,10 @@ services:
       --collation-server=utf8mb4_unicode_ci
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_PORT=${MYSQL_PORT}
     volumes:
       - mariadb-data:/var/lib/mysql
+      - ./mariadb/init:/docker-entrypoint-initdb.d:ro
     networks:
       - internal-net
     deploy:
@@ -53,6 +53,46 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter
+    container_name: mysqld-exporter
+    restart: unless-stopped
+    command:
+      - '--collect.global_status'
+      - '--collect.global_variables'
+      - '--collect.info_schema.processlist'
+      - '--collect.slave_status'
+      - '--collect.info_schema.tables'
+      - '--collect.info_schema.tablestats'
+      - '--collect.engine_innodb_status'
+      - '--collect.auto_increment.columns'
+      - '--collect.binlog_size'
+      - '--collect.info_schema.query_response_time'
+      - '--config.my-cnf=/etc/mysqld_exporter/.my.cnf'
+    environment:
+      - DATA_SOURCE_NAME=exporter:exporter@(mariadb:3306)/
+    volumes:
+      - ./mariadb/mysqld_exporter.cnf:/etc/mysqld_exporter/.my.cnf:ro
+    expose:
+      - 9104
+    networks:
+      - internal-net
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.2'
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', 'http://localhost:9104/metrics']
+      interval: 30s
+      timeout: 5s
+      retries: 3
     logging:
       driver: 'json-file'
       options:
@@ -125,7 +165,7 @@ services:
     restart: unless-stopped
     volumes:
       - prometheus-data:/prometheus
-      - /etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     networks:
       - internal-net
     read_only: true
@@ -169,6 +209,27 @@ services:
       options:
         max-size: '10m'
         max-file: '3'
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+    networks:
+      - internal-net
+    environment:
+      - ADMINER_DEFAULT_SERVER=mariadb
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.1'
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '5m'
+        max-file: '1'
 
 volumes:
   redis-data:

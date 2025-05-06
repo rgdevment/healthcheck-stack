@@ -33,7 +33,7 @@
       }
     ]
   },
-  "description": "Prometheus MySQL Exporter with preconfigured dashboards, alerting rules, and recording rules.",
+  "description": "A quickstart to setup the Prometheus MySQL Exporter with preconfigured dashboards, alerting rules, and recording rules.",
   "editable": true,
   "gnetId": 14057,
   "graphTooltip": 1,
@@ -3748,7 +3748,7 @@
     "type": "timepicker"
   },
   "timezone": "",
-  "title": "Prometheus MySQL Dashboard",
+  "title": "MySQL Exporter",
   "uid": "549c2bf8936f7767ea6ac47c47b00f2a",
   "version": 1
 }

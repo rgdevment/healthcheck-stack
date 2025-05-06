@@ -1,0 +1,4 @@
+[client]
+user=exporter
+password=$MYSQL_EXPORTER_PASSWORD
+host=mariadb

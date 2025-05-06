@@ -2,14 +2,14 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'countries'
+  - job_name: 'prometheus'
     static_configs:
-      - targets: ['retrieve-countries:3000']
-
-  - job_name: 'indicadores'
-    static_configs:
-      - targets: ['indicadores-chile:3000']
+      - targets: ['localhost:9090']
 
   - job_name: 'redis'
     static_configs:
       - targets: ['redis-exporter:9121']
+
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysqld-exporter:9104']
