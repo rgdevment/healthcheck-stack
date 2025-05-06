@@ -61,13 +61,13 @@ status:
 # === Adminer (uso opcional de emergencia) ===
 adminer:
 	@echo "🚀 Levantando Adminer en background (http://localhost:8080)..."
-	docker compose up -d adminer
-	@echo "✅ Adminer disponible en red interna, puerto 8080 (según tu red o túnel Cloudflare)"
+	docker compose --profile adminer up -d adminer
+	@echo "✅ Adminer disponible en red interna, puerto 8080"
 
 down-adminer:
 	@echo "🛑 Deteniendo y eliminando Adminer..."
-	docker compose stop adminer
-	docker compose rm -f adminer
+	@docker compose --profile adminer stop adminer || true
+	@docker compose --profile adminer rm -f adminer || true
 	@echo "✅ Adminer detenido y eliminado"
 
 # === COMPOSITE TARGETS ===

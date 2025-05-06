@@ -214,8 +214,8 @@ services:
     image: adminer
     container_name: adminer
     restart: unless-stopped
-    ports:
-      - 8080:8080
+    expose:
+      - 8080
     networks:
       - internal-net
     environment:
@@ -225,6 +225,8 @@ services:
         limits:
           memory: 128M
           cpus: '0.1'
+    profiles:
+      - adminer
     logging:
       driver: 'json-file'
       options:
