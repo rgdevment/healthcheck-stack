@@ -3,7 +3,7 @@ ENV_FILE = .env
 ENV_EXAMPLE = .env.example
 STACK_NAME = internal-net
 SHARED_LIBS_DIR = shared-libs
-DOCKER_COMPOSE = docker-compose -f $(CURDIR)/docker-compose.yml
+DOCKER_COMPOSE = docker-compose -f $(abspath docker-compose.yml)
 
 # === MYSQL EXPORTER FILES ===
 init-secrets:
