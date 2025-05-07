@@ -7,7 +7,7 @@ SHARED_LIBS_DIR = shared-libs
 # === MYSQL EXPORTER FILES ===
 init-secrets:
 	@echo "🔐 Generando archivos de configuración reales desde variables .env..."
-	@set -a && source .env && set +a && \
+	@set -a && . .env && set +a && \
 	envsubst '$$MYSQL_EXPORTER_PASSWORD' < mariadb/init/01-exporter-user.sql.example > mariadb/init/01-exporter-user.sql && \
 	envsubst '$$MYSQL_EXPORTER_PASSWORD' < mariadb/mysqld_exporter.cnf.example > mariadb/mysqld_exporter.cnf
 	@echo "✅ Archivos reales generados con variables sustituidas."
