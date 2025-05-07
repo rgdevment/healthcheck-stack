@@ -3,7 +3,7 @@ set -euo pipefail
 
 # === Configuration ===
 TIMESTAMP=$(date +"%Y-%m-%d-%H%M")
-LOCAL_BACKUP="./backups/${TIMESTAMP}"
+LOCAL_BACKUP="/opt/stack-monitoring/backups/${TIMESTAMP}"
 GDRIVE_REMOTE="gdrive"
 GDRIVE_FOLDER="Backups/system/stack-monitoring"
 
