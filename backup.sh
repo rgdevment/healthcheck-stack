@@ -44,7 +44,7 @@ mkdir -p "${LOCAL_BACKUP}"
 echo "📦 Dumping MariaDB from outside container..."
 
 docker run --rm \
-  --network stack-monitoring_internal-net \
+  --network internal-net \
   -e MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" \
   -v "${LOCAL_BACKUP}:/backup" \
   mariadb:11 \
