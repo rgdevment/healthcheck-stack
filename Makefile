@@ -3,6 +3,7 @@ ENV_FILE = .env
 ENV_EXAMPLE = .env.example
 STACK_NAME = internal-net
 SHARED_LIBS_DIR = shared-libs
+DOCKER_COMPOSE = docker-compose -f $(CURDIR)/docker-compose.yml
 
 # === MYSQL EXPORTER FILES ===
 init-secrets:
@@ -37,37 +38,37 @@ ensure-network:
 
 up:
 	@echo "🚀 Starting infrastructure stack..."
-	docker-compose up -d --build
+	@$(DOCKER_COMPOSE) up -d --build
 
 down:
 	@echo "💥 Stopping infrastructure stack and removing volumes..."
-	docker-compose down -v
+	@$(DOCKER_COMPOSE) down -v
 
 restart-db:
 	@echo "🔄 Restarting MariaDB only..."
-	docker-compose restart mariadb
+	@$(DOCKER_COMPOSE) restart mariadb
 
 clean:
 	@echo "🧹 Cleaning Docker system..."
 	docker system prune -af --volumes
 
 logs:
-	docker-compose logs -f
+	@$(DOCKER_COMPOSE) logs -f
 
 status:
 	@echo "📋 Docker container status:"
-	docker ps --format "table {{.Names}}\t{{.Status}}" | grep -E "mariadb|redis|grafana|prometheus|cloudflared" || true
+	@docker ps --format "table {{.Names}}\t{{.Status}}" | grep -E "mariadb|redis|grafana|prometheus|cloudflared" || true
 
 # === Adminer (uso opcional de emergencia) ===
 adminer:
 	@echo "🚀 Levantando Adminer en background (http://localhost:8080)..."
-	docker-compose --profile adminer up -d adminer
+	@$(DOCKER_COMPOSE) --profile adminer up -d adminer
 	@echo "✅ Adminer disponible en red interna, puerto 8080"
 
 down-adminer:
 	@echo "🛑 Deteniendo y eliminando Adminer..."
-	@docker-compose --profile adminer stop adminer || true
-	@docker-compose --profile adminer rm -f adminer || true
+	@$(DOCKER_COMPOSE) --profile adminer stop adminer || true
+	@$(DOCKER_COMPOSE) --profile adminer rm -f adminer || true
 	@echo "✅ Adminer detenido y eliminado"
 
 # === COMPOSITE TARGETS ===
@@ -84,4 +85,4 @@ restart-stack:
 	@$(MAKE) up
 	@$(MAKE) status
 
-.PHONY: sync-env verify-env shared-libs ensure-network up down restart-db clean logs status adminer adminer-down stack restart-stack
+.PHONY: sync-env verify-env shared-libs ensure-network up down restart-db clean logs status adminer down-adminer stack restart-stack
