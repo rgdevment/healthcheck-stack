@@ -71,7 +71,12 @@ echo "✅ Backup uploaded to cloud."
 # === Cleanup old backups in Google Drive ===
 echo "🧹 Cleaning up old remote backups (keeping 5 most recent)..."
 REMOTE_DIR="${GDRIVE_REMOTE}:${GDRIVE_FOLDER}"
-mapfile -t old_dirs < <(rclone lsf "$REMOTE_DIR" --dirs-only --format t --sort -time | tail -n +6)
+mapfile -t old_dirs < <(
+  rclone lsd "$REMOTE_DIR" \
+    | sort -k2 -r \
+    | tail -n +6 \
+    | awk '{print $NF}'
+)
 
 if [ ${#old_dirs[@]} -gt 0 ]; then
   for dir in "${old_dirs[@]}"; do
