@@ -47,7 +47,7 @@ docker run --rm \
   --network internal-net \
   -e MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" \
   -v "${LOCAL_BACKUP}:/backup" \
-  mariadb:10.6-bullseye \
+  mariadb:10.6 \
   sh -c 'mysqldump -hmariadb -uroot --all-databases --single-transaction --quick --lock-tables=false > /backup/mariadb.sql'
 
 echo "✅ MariaDB backup completed at ${LOCAL_BACKUP}"
