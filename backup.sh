@@ -3,9 +3,9 @@ set -euo pipefail
 
 # === Configuration ===
 TIMESTAMP=$(date +"%Y-%m-%d-%H%M")
-LOCAL_BACKUP="/opt/backups/${TIMESTAMP}"
+LOCAL_BACKUP="./backups/${TIMESTAMP}"
 GDRIVE_REMOTE="gdrive"
-GDRIVE_FOLDER="Backups/system/apirest-health"
+GDRIVE_FOLDER="Backups/system/stack-monitoring"
 
 echo "🔄 Starting backup: ${TIMESTAMP}"
 
@@ -21,8 +21,16 @@ done
 mkdir -p "${LOCAL_BACKUP}"
 
 # === MariaDB ===
-echo "📦 Dumping MariaDB..."
-docker exec mariadb sh -c 'exec mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --all-databases --single-transaction --quick --lock-tables=false' > "${LOCAL_BACKUP}/mariadb.sql"
+echo "📦 Dumping MariaDB from outside container..."
+
+docker run --rm \
+  --network stack-monitoring_internal-net \
+  -e MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" \
+  -v "${LOCAL_BACKUP}:/backup" \
+  mariadb:11 \
+  sh -c 'mysqldump -hmariadb -uroot --all-databases --single-transaction --quick --lock-tables=false > /backup/mariadb.sql'
+
+echo "✅ Backup completed at ${LOCAL_BACKUP}"
 
 # === Redis ===
 echo "📦 Saving Redis snapshot..."
