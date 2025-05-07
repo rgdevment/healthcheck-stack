@@ -37,22 +37,22 @@ ensure-network:
 
 up:
 	@echo "🚀 Starting infrastructure stack..."
-	docker compose up -d --build
+	docker-compose up -d --build
 
 down:
 	@echo "💥 Stopping infrastructure stack and removing volumes..."
-	docker compose down -v
+	docker-compose down -v
 
 restart-db:
 	@echo "🔄 Restarting MariaDB only..."
-	docker compose restart mariadb
+	docker-compose restart mariadb
 
 clean:
 	@echo "🧹 Cleaning Docker system..."
 	docker system prune -af --volumes
 
 logs:
-	docker compose logs -f
+	docker-compose logs -f
 
 status:
 	@echo "📋 Docker container status:"
@@ -61,13 +61,13 @@ status:
 # === Adminer (uso opcional de emergencia) ===
 adminer:
 	@echo "🚀 Levantando Adminer en background (http://localhost:8080)..."
-	docker compose --profile adminer up -d adminer
+	docker-compose --profile adminer up -d adminer
 	@echo "✅ Adminer disponible en red interna, puerto 8080"
 
 down-adminer:
 	@echo "🛑 Deteniendo y eliminando Adminer..."
-	@docker compose --profile adminer stop adminer || true
-	@docker compose --profile adminer rm -f adminer || true
+	@docker-compose --profile adminer stop adminer || true
+	@docker-compose --profile adminer rm -f adminer || true
 	@echo "✅ Adminer detenido y eliminado"
 
 # === COMPOSITE TARGETS ===
