@@ -12,19 +12,16 @@ load_env() {
   local env_file="${1:-.env}"
 
   if [[ ! -f "$env_file" ]]; then
-    echo "❌ Environment file '$env_file' not found."
+    echo "❌ Environment fileenv_file' not found."
     exit 1
   fi
 
-  # Export variables only if not already defined
   set -o allexport
-  grep -vE '^\s*#' "$env_file" | grep -E '^\s*[A-Za-z_][A-Za-z0-9_]*=' | while IFS='=' read -r key value; do
-    if [[ -z "${!key:-}" ]]; then
-      export "$key"="$value"
-    fi
-  done
+  # shellcheck disable=SC1090
+  source "$env_file"
   set +o allexport
 }
+
 
 # === Load .env before using any vars ===
 load_env /opt/stack-monitoring/.env
