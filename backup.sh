@@ -7,6 +7,29 @@ LOCAL_BACKUP="./backups/${TIMESTAMP}"
 GDRIVE_REMOTE="gdrive"
 GDRIVE_FOLDER="Backups/system/stack-monitoring"
 
+# === Secure .env loader ===
+load_env() {
+  local env_file="${1:-.env}"
+
+  if [[ ! -f "$env_file" ]]; then
+    echo "❌ Environment file '$env_file' not found."
+    exit 1
+  fi
+
+  # Export variables only if not already defined
+  set -o allexport
+  grep -vE '^\s*#' "$env_file" | grep -E '^\s*[A-Za-z_][A-Za-z0-9_]*=' | while IFS='=' read -r key value; do
+    if [[ -z "${!key:-}" ]]; then
+      export "$key"="$value"
+    fi
+  done
+  set +o allexport
+}
+
+# === Load .env before using any vars ===
+load_env /opt/stack-monitoring/.env
+: "${MYSQL_ROOT_PASSWORD:?❌ MYSQL_ROOT_PASSWORD is required but not set}"
+
 echo "🔄 Starting backup: ${TIMESTAMP}"
 
 # === Ensure containers are running ===
@@ -30,7 +53,7 @@ docker run --rm \
   mariadb:11 \
   sh -c 'mysqldump -hmariadb -uroot --all-databases --single-transaction --quick --lock-tables=false > /backup/mariadb.sql'
 
-echo "✅ Backup completed at ${LOCAL_BACKUP}"
+echo "✅ MariaDB backup completed at ${LOCAL_BACKUP}"
 
 # === Redis ===
 echo "📦 Saving Redis snapshot..."
@@ -46,6 +69,6 @@ echo "☁️ Uploading to Google Drive (${GDRIVE_FOLDER})..."
 rclone copy "${LOCAL_BACKUP}" "${GDRIVE_REMOTE}:${GDRIVE_FOLDER}/${TIMESTAMP}" --quiet
 
 # === Optional: Cleanup old local backups (15+ days) ===
-find /opt/backups -type d -mtime +15 -exec rm -rf {} \;
+find ./backups -type d -mtime +15 -exec rm -rf {} \;
 
 echo "✅ Backup completed and uploaded!"
