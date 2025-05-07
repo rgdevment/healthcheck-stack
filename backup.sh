@@ -12,7 +12,7 @@ load_env() {
   local env_file="${1:-.env}"
 
   if [[ ! -f "$env_file" ]]; then
-    echo "❌ Environment fileenv_file' not found."
+    echo "❌ Environment file '$env_file' not found."
     exit 1
   fi
 
@@ -21,7 +21,6 @@ load_env() {
   source "$env_file"
   set +o allexport
 }
-
 
 # === Load .env before using any vars ===
 load_env /opt/stack-monitoring/.env
@@ -42,14 +41,12 @@ mkdir -p "${LOCAL_BACKUP}"
 
 # === MariaDB ===
 echo "📦 Dumping MariaDB from outside container..."
-
 docker run --rm \
   --network internal-net \
   -e MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" \
   -v "${LOCAL_BACKUP}:/backup" \
   mariadb:10.6 \
   sh -c 'mysqldump -hmariadb -uroot --all-databases --single-transaction --quick --lock-tables=false > /backup/mariadb.sql'
-
 echo "✅ MariaDB backup completed at ${LOCAL_BACKUP}"
 
 # === Redis ===
@@ -61,11 +58,28 @@ docker cp redis:/data/dump.rdb "${LOCAL_BACKUP}/redis.rdb"
 echo "📦 Copying Grafana config..."
 docker cp grafana:/var/lib/grafana "${LOCAL_BACKUP}/grafana"
 
+# === Clean up local backups BEFORE upload ===
+echo "🧹 Cleaning up old local backups..."
+ls -1dt ./backups/*/ | tail -n +6 | xargs -d '\n' rm -rf || true
+find ./backups -type d -mtime +30 -exec rm -rf {} \;
+
 # === Upload to Google Drive using rclone ===
 echo "☁️ Uploading to Google Drive (${GDRIVE_FOLDER})..."
 rclone copy "${LOCAL_BACKUP}" "${GDRIVE_REMOTE}:${GDRIVE_FOLDER}/${TIMESTAMP}" --quiet
+echo "✅ Backup uploaded to cloud."
 
-# === Optional: Cleanup old local backups (15+ days) ===
-find ./backups -type d -mtime +15 -exec rm -rf {} \;
+# === Cleanup old backups in Google Drive ===
+echo "🧹 Cleaning up old remote backups (keeping 5 most recent)..."
+REMOTE_DIR="${GDRIVE_REMOTE}:${GDRIVE_FOLDER}"
+mapfile -t old_dirs < <(rclone lsf "$REMOTE_DIR" --dirs-only --format t --sort -time | tail -n +6)
 
-echo "✅ Backup completed and uploaded!"
+if [ ${#old_dirs[@]} -gt 0 ]; then
+  for dir in "${old_dirs[@]}"; do
+    echo "  🔥 Removing $REMOTE_DIR/$dir"
+    rclone purge "$REMOTE_DIR/$dir"
+  done
+else
+  echo "✅ No old remote backups to remove."
+fi
+
+echo "✅ Backup and cleanup completed successfully!"
