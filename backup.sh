@@ -74,6 +74,33 @@ docker cp redis:/data/dump.rdb "${LOCAL_BACKUP}/redis.rdb"
 echo "📦 Copying Grafana config..."
 docker cp grafana:/var/lib/grafana "${LOCAL_BACKUP}/grafana"
 
+# === Compress key backup modules ===
+echo "📦 Compressing modular components (AdGuard, Jellyfin, Grafana)..."
+
+# AdGuard
+if [ -d "${LOCAL_BACKUP}/backups/adguardhome" ]; then
+  tar -czf "${LOCAL_BACKUP}/adguardhome.tar.gz" -C "${LOCAL_BACKUP}/backups" adguardhome
+  rm -rf "${LOCAL_BACKUP}/backups/adguardhome"
+  echo "✅ AdGuard compressed."
+fi
+
+# Jellyfin
+if [ -d "${LOCAL_BACKUP}/backups/jellyfin" ]; then
+  tar -czf "${LOCAL_BACKUP}/jellyfin.tar.gz" -C "${LOCAL_BACKUP}/backups" jellyfin
+  rm -rf "${LOCAL_BACKUP}/backups/jellyfin"
+  echo "✅ Jellyfin compressed."
+fi
+
+# Grafana
+if [ -d "${LOCAL_BACKUP}/grafana" ]; then
+  tar -czf "${LOCAL_BACKUP}/grafana.tar.gz" -C "${LOCAL_BACKUP}" grafana
+  rm -rf "${LOCAL_BACKUP}/grafana"
+  echo "✅ Grafana compressed."
+fi
+
+echo "🎯 Compression completed."
+
+
 # === Clean up local backups BEFORE upload ===
 echo "🧹 Cleaning up old local backups..."
 ls -1dt ./backups/*/ | tail -n +6 | xargs -d '\n' rm -rf || true
