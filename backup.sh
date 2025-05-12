@@ -1,6 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
+LOG_FILE="/opt/stack-monitoring/backups/backup.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+MAXSIZE=1048576  # 1 MB
+if [ -f "$LOG_FILE" ] && [ "$(stat -c%s "$LOG_FILE")" -gt "$MAXSIZE" ]; then
+  echo "🧹 Truncating $LOG_FILE (larger than 1MB)"
+  > "$LOG_FILE"
+fi
+
 # === Configuration ===
 TIMESTAMP=$(date +"%Y-%m-%d-%H%M")
 LOCAL_BACKUP="/opt/stack-monitoring/backups/${TIMESTAMP}"
@@ -39,6 +48,13 @@ done
 # === Create local backup directory ===
 mkdir -p "${LOCAL_BACKUP}"
 
+# === Full /opt/backups/ directory ===
+echo "📦 Backing up full /opt/backups/ (includes AdGuard, Jellyfin, etc.)..."
+mkdir -p "${LOCAL_BACKUP}/backups"
+sudo cp -r /opt/backups/* "${LOCAL_BACKUP}/backups/"
+sudo chown -R rgdevment:rgdevment "${LOCAL_BACKUP}/backups/"
+echo "✅ /opt/backups/ copied completely."
+
 # === MariaDB ===
 echo "📦 Dumping MariaDB from outside container..."
 docker run --rm \
@@ -66,6 +82,12 @@ find ./backups -type d -mtime +30 -exec rm -rf {} \;
 # === Upload to Google Drive using rclone ===
 echo "☁️ Uploading to Google Drive (${GDRIVE_FOLDER})..."
 rclone copy "${LOCAL_BACKUP}" "${GDRIVE_REMOTE}:${GDRIVE_FOLDER}/${TIMESTAMP}" --quiet
+
+if [ $? -ne 0 ]; then
+  echo "❌ Error uploading to Google Drive. Check rclone config."
+  exit 1
+fi
+
 echo "✅ Backup uploaded to cloud."
 
 # === Cleanup old backups in Google Drive ===
