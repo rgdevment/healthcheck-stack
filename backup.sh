@@ -54,8 +54,12 @@ mkdir -p "${LOCAL_BACKUP}"
 # === Full /opt/backups/ directory ===
 echo "📦 Backing up full /opt/backups/ (includes AdGuard, Jellyfin, etc.)..."
 mkdir -p "${LOCAL_BACKUP}/backups"
-sudo cp -r /opt/backups/* "${LOCAL_BACKUP}/backups/"
-sudo chown -R rgdevment:rgdevment "${LOCAL_BACKUP}/backups/"
+# (rclone problem) sudo cp -r /opt/backups/* "${LOCAL_BACKUP}/backups/"
+# (rclone problem) sudo chown -R rgdevment:rgdevment "${LOCAL_BACKUP}/backups/"
+# add on - sudo visudo -f /etc/sudoers.d/backup
+# rgdevment ALL=(ALL) NOPASSWD: /bin/cp, /bin/chown
+sudo /bin/cp -r /opt/backups/* "${LOCAL_BACKUP}/backups/"
+sudo /bin/chown -R rgdevment:rgdevment "${LOCAL_BACKUP}/backups/"
 echo "✅ /opt/backups/ copied completely."
 
 # === MariaDB ===
