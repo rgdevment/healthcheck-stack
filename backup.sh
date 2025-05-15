@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+cd "$(dirname "$0")"
+
 LOG_FILE="/opt/stack-monitoring/backups/backup.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
@@ -11,8 +13,9 @@ if [ -f "$LOG_FILE" ] && [ "$(stat -c%s "$LOG_FILE")" -gt "$MAXSIZE" ]; then
 fi
 
 # === Configuration ===
+BACKUP_BASE="/opt/stack-monitoring/backups"
 TIMESTAMP=$(date +"%Y-%m-%d-%H%M")
-LOCAL_BACKUP="/opt/stack-monitoring/backups/${TIMESTAMP}"
+LOCAL_BACKUP="${BACKUP_BASE}/${TIMESTAMP}"
 GDRIVE_REMOTE="gdrive"
 GDRIVE_FOLDER="Backups/system/stack-monitoring"
 
@@ -103,8 +106,8 @@ echo "🎯 Compression completed."
 
 # === Clean up local backups BEFORE upload ===
 echo "🧹 Cleaning up old local backups..."
-ls -1dt ./backups/*/ | tail -n +6 | xargs -d '\n' rm -rf || true
-find ./backups -type d -mtime +30 -exec rm -rf {} \;
+ls -1dt "${BACKUP_BASE}"/*/ 2>/dev/null | tail -n +6 | xargs -d '\n' rm -rf || true
+find "${BACKUP_BASE}" -mindepth 1 -maxdepth 1 -type d -mtime +30 -exec rm -rf {} \;
 
 # === Upload to Google Drive using rclone ===
 echo "☁️ Uploading to Google Drive (${GDRIVE_FOLDER})..."
