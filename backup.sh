@@ -144,3 +144,21 @@ else
 fi
 
 echo "✅ Backup and cleanup completed successfully!"
+
+
+Tabla (Prueba) Firewall restrictivo
+Tipo de tabla de filtro: Lista de Admitidos
+
+| Dirección IP de origen | Puerto origen | Dirección IP de destino | Puerto destino | Protocolo | Descripción                                         |
+|------------------------|---------------|--------------------------|----------------|-----------|-----------------------------------------------------|
+| *(vacío)*              | *(vacío)*     | 192.168.50.100           | 53             | TCP       | Clientes ➝ AdGuard DNS TCP                         |
+| *(vacío)*              | *(vacío)*     | 192.168.50.100           | 53             | UDP       | Clientes ➝ AdGuard DNS UDP                         |
+| 192.168.50.100         | *(vacío)*     | *(vacío)*                | 853            | TCP       | AdGuard ➝ DNS over TLS                             |
+| 192.168.50.100         | *(vacío)*     | *(vacío)*                | 80             | TCP       | AdGuard ➝ HTTP (fallback, updates)                |
+| 192.168.50.100         | *(vacío)*     | *(vacío)*                | 53             | TCP       | AdGuard ➝ DNS plano TCP (fallback opcional)       |
+| 192.168.50.100         | *(vacío)*     | *(vacío)*                | 53             | UDP       | AdGuard ➝ DNS plano UDP (fallback opcional)       |
+| *(vacío)*              | *(vacío)*     | *(vacío)*                | 443            | TCP       | Clientes ➝ HTTPS (por si algo no pasa por AdGuard)|
+| *(vacío)*              | *(vacío)*     | *(vacío)*                | 443            | UDP       | Clientes ➝ QUIC (YouTube, Google, Cloudflare)     |
+| *(vacío)*              | *(vacío)*     | *(vacío)*                | 80             | TCP       | Clientes ➝ HTTP (redirecciones o fallback web)     |
+| *(vacío)*              | *(vacío)*     | *(vacío)*                | 80             | UDP       | *(raro, pero mantenido por compatibilidad)*        |
+| *(vacío)*              | *(vacío)*     | *(vacío)*                | 123            | UDP       | Clientes ➝ NTP (hora)                              |
