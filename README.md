@@ -78,3 +78,29 @@ Puedes encontrar los dashboards en `grafana/exported-dashboards/monitoring`.
 
 - Docker + Docker Compose
 - rclone configurado si usas backup en Google Drive
+
+## 🧰 Instalación inicial de rclone y configuración de Google Drive
+
+### 1. Instalar rclone
+
+```bash
+curl https://rclone.org/install.sh | sudo bash
+```
+
+### 2. Configurar Google Drive con rclone
+
+```bash
+rclone config
+```
+
+Selecciona:
+- `n` para crear un nuevo remote
+- Nombre sugerido: `gdrive`
+- Tipo de almacenamiento: `drive`
+- Usa tu propio `client_id` y `client_secret` de Google Cloud Console *(opcional pero recomendado)*
+- Deja el resto como está o acepta los defaults
+- Autentica en el navegador cuando lo pida
+
+Después, puedes ver tu configuración guardada en `~/.config/rclone/rclone.conf`
+
+Si necesitas tokens compartidos para un servidor sin navegador, también puedes copiar este archivo de otro equipo.
