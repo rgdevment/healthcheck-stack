@@ -69,7 +69,8 @@ docker run --rm \
   -e MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" \
   -v "${LOCAL_BACKUP}:/backup" \
   mariadb:10.6 \
-  sh -c 'mysqldump -hmariadb -uroot --all-databases --single-transaction --quick --lock-tables=false > /backup/mariadb.sql'
+  sh -c 'mysqldump -hmariadb -uroot --all-databases --flush-privileges --single-transaction --quick --lock-tables=false > /backup/mariadb.sql'
+
 echo "✅ MariaDB backup completed at ${LOCAL_BACKUP}"
 
 # === Redis ===
@@ -110,7 +111,7 @@ echo "🎯 Compression completed."
 
 # === Clean up local backups BEFORE upload ===
 echo "🧹 Cleaning up old local backups..."
-ls -1dt "${BACKUP_BASE}"/*/ 2>/dev/null | tail -n +6 | xargs -d '\n' rm -rf || true
+ls -1dt "${BACKUP_BASE}"/*/ 2>/dev/null | tail -n +11 | xargs -d '\n' rm -rf || true
 find "${BACKUP_BASE}" -mindepth 1 -maxdepth 1 -type d -mtime +30 -exec rm -rf {} \;
 
 # === Upload to Google Drive using rclone ===
@@ -130,7 +131,7 @@ REMOTE_DIR="${GDRIVE_REMOTE}:${GDRIVE_FOLDER}"
 mapfile -t old_dirs < <(
   rclone lsd "$REMOTE_DIR" \
     | sort -k2 -r \
-    | tail -n +6 \
+    | tail -n +11 \
     | awk '{print $NF}'
 )
 
@@ -144,21 +145,3 @@ else
 fi
 
 echo "✅ Backup and cleanup completed successfully!"
-
-
-Tabla (Prueba) Firewall restrictivo
-Tipo de tabla de filtro: Lista de Admitidos
-
-| Dirección IP de origen | Puerto origen | Dirección IP de destino | Puerto destino | Protocolo | Descripción                                         |
-|------------------------|---------------|--------------------------|----------------|-----------|-----------------------------------------------------|
-| *(vacío)*              | *(vacío)*     | 192.168.50.100           | 53             | TCP       | Clientes ➝ AdGuard DNS TCP                         |
-| *(vacío)*              | *(vacío)*     | 192.168.50.100           | 53             | UDP       | Clientes ➝ AdGuard DNS UDP                         |
-| 192.168.50.100         | *(vacío)*     | *(vacío)*                | 853            | TCP       | AdGuard ➝ DNS over TLS                             |
-| 192.168.50.100         | *(vacío)*     | *(vacío)*                | 80             | TCP       | AdGuard ➝ HTTP (fallback, updates)                |
-| 192.168.50.100         | *(vacío)*     | *(vacío)*                | 53             | TCP       | AdGuard ➝ DNS plano TCP (fallback opcional)       |
-| 192.168.50.100         | *(vacío)*     | *(vacío)*                | 53             | UDP       | AdGuard ➝ DNS plano UDP (fallback opcional)       |
-| *(vacío)*              | *(vacío)*     | *(vacío)*                | 443            | TCP       | Clientes ➝ HTTPS (por si algo no pasa por AdGuard)|
-| *(vacío)*              | *(vacío)*     | *(vacío)*                | 443            | UDP       | Clientes ➝ QUIC (YouTube, Google, Cloudflare)     |
-| *(vacío)*              | *(vacío)*     | *(vacío)*                | 80             | TCP       | Clientes ➝ HTTP (redirecciones o fallback web)     |
-| *(vacío)*              | *(vacío)*     | *(vacío)*                | 80             | UDP       | *(raro, pero mantenido por compatibilidad)*        |
-| *(vacío)*              | *(vacío)*     | *(vacío)*                | 123            | UDP       | Clientes ➝ NTP (hora)                              |
