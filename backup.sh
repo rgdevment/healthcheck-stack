@@ -75,8 +75,11 @@ echo "✅ MariaDB backup completed at ${LOCAL_BACKUP}"
 
 # === MariaDB: Dump explicit appuser privileges ===
 echo "📜 Extracting appuser credentials and grants..."
-docker exec -e MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mariadb \
-  sh -c "mysql -uroot -NBe \"
+docker run --rm \
+  --network internal-net \
+  -e MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" \
+  mariadb:10.6 \
+  sh -c "mysql -hmariadb -uroot -NBe \"
     SELECT CONCAT(
       'CREATE USER IF NOT EXISTS ''', user, '''@''', host,
       ''' IDENTIFIED BY PASSWORD ''', authentication_string, ''';'
