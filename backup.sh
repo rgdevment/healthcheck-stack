@@ -73,6 +73,26 @@ docker run --rm \
 
 echo "✅ MariaDB backup completed at ${LOCAL_BACKUP}"
 
+# === MariaDB: Dump explicit appuser privileges ===
+echo "📜 Extracting appuser credentials and grants..."
+docker exec -e MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" mariadb \
+  sh -c "mysql -uroot -NBe \"
+    SELECT CONCAT(
+      'CREATE USER IF NOT EXISTS ''', user, '''@''', host,
+      ''' IDENTIFIED BY PASSWORD ''', authentication_string, ''';'
+    )
+    FROM mysql.user
+    WHERE user = 'appuser' AND host = '%';
+
+    SELECT CONCAT(
+      'GRANT ', privilege_type, ' ON ', table_schema, '.* TO ', grantee, ';'
+    )
+    FROM information_schema.schema_privileges
+    WHERE grantee LIKE '''appuser@%''';
+  \"" > "${LOCAL_BACKUP}/appuser-grants.sql"
+
+echo "✅ appuser-grants.sql created."
+
 # === Redis ===
 echo "📦 Saving Redis snapshot..."
 docker exec redis redis-cli save
@@ -104,6 +124,13 @@ if [ -d "${LOCAL_BACKUP}/grafana" ]; then
   tar -czf "${LOCAL_BACKUP}/grafana.tar.gz" -C "${LOCAL_BACKUP}" grafana
   rm -rf "${LOCAL_BACKUP}/grafana"
   echo "✅ Grafana compressed."
+fi
+
+# Scripts
+if [ -d "${LOCAL_BACKUP}/scripts" ]; then
+  tar -czf "${LOCAL_BACKUP}/scripts.tar.gz" -C "${LOCAL_BACKUP}" scripts
+  rm -rf "${LOCAL_BACKUP}/scripts"
+  echo "✅ scripts compressed."
 fi
 
 echo "🎯 Compression completed."
