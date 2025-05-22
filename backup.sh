@@ -73,29 +73,6 @@ docker run --rm \
 
 echo "✅ MariaDB backup completed at ${LOCAL_BACKUP}"
 
-# === MariaDB: Dump explicit appuser privileges ===
-echo "📜 Extracting appuser credentials and grants..."
-docker run --rm \
-  --network internal-net \
-  -e MYSQL_PWD="${MYSQL_ROOT_PASSWORD}" \
-  mariadb:10.6 \
-  sh -c "mysql -hmariadb -uroot -NBe \"
-    SELECT CONCAT(
-      'CREATE USER IF NOT EXISTS ''', user, '''@''', host,
-      ''' IDENTIFIED BY PASSWORD ''', authentication_string, ''';'
-    )
-    FROM mysql.user
-    WHERE user = 'appuser' AND host = '%';
-
-    SELECT CONCAT(
-      'GRANT ', privilege_type, ' ON ', table_schema, '.* TO ', grantee, ';'
-    )
-    FROM information_schema.schema_privileges
-    WHERE grantee LIKE '''appuser@%''';
-  \"" > "${LOCAL_BACKUP}/appuser-grants.sql"
-
-echo "✅ appuser-grants.sql created."
-
 # === Redis ===
 echo "📦 Saving Redis snapshot..."
 docker exec redis redis-cli save
@@ -129,15 +106,7 @@ if [ -d "${LOCAL_BACKUP}/grafana" ]; then
   echo "✅ Grafana compressed."
 fi
 
-# Scripts
-if [ -d "${LOCAL_BACKUP}/scripts" ]; then
-  tar -czf "${LOCAL_BACKUP}/scripts.tar.gz" -C "${LOCAL_BACKUP}" scripts
-  rm -rf "${LOCAL_BACKUP}/scripts"
-  echo "✅ scripts compressed."
-fi
-
 echo "🎯 Compression completed."
-
 
 # === Clean up local backups BEFORE upload ===
 echo "🧹 Cleaning up old local backups..."
