@@ -7,11 +7,12 @@ DOCKER_COMPOSE = docker compose -f docker-compose.yml
 
 # === MYSQL EXPORTER FILES ===
 init-secrets:
-	@echo "🔐 Generando archivos de configuración reales desde variables .env..."
+	@echo "🔐 Generating real configuration files from .env variables..."
 	@set -a && . ./$(ENV_FILE) && set +a && \
 	envsubst '$$MYSQL_EXPORTER_PASSWORD' < mariadb/init/01-exporter-user.sql.example > mariadb/init/01-exporter-user.sql && \
-	envsubst '$$MYSQL_EXPORTER_PASSWORD' < mariadb/mysqld_exporter.cnf.example > mariadb/mysqld_exporter.cnf
-	@echo "✅ Archivos reales generados con variables sustituidas."
+	envsubst '$$MYSQL_EXPORTER_PASSWORD' < mariadb/mysqld_exporter.cnf.example > mariadb/mysqld_exporter.cnf && \
+	envsubst '$$MYSQL_APP_USER_NAME $$MYSQL_APP_USER_PASSWORD' < mariadb/init/02-app-user.sql.example > mariadb/init/02-app-user.sql
+	@echo "✅ Real files generated with substituted variables."
 
 # === ENVIRONMENT ===
 sync-env:
