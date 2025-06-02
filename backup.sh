@@ -18,6 +18,11 @@ TIMESTAMP=$(date +"%Y-%m-%d-%H%M")
 LOCAL_BACKUP="${BACKUP_BASE}/${TIMESTAMP}"
 GDRIVE_REMOTE="gdrive"
 GDRIVE_FOLDER="Backups/system/stack-monitoring"
+# --- Remote Backup Retention ---
+NUM_REMOTE_BACKUPS_TO_KEEP=10 # Number of backups to keep on Google Drive
+# --- Local Backup Retention ---
+NUM_LOCAL_BACKUPS_TO_KEEP_BY_COUNT=10 # How many local backups to keep (by count)
+NUM_LOCAL_BACKUPS_TO_KEEP_BY_DAYS=30  # Maximum age in days for local backups
 
 # === Secure .env loader ===
 load_env() {
@@ -109,9 +114,27 @@ fi
 echo "🎯 Compression completed."
 
 # === Clean up local backups BEFORE upload ===
-echo "🧹 Cleaning up old local backups..."
-ls -1dt "${BACKUP_BASE}"/*/ 2>/dev/null | tail -n +11 | xargs -d '\n' rm -rf || true
-find "${BACKUP_BASE}" -mindepth 1 -maxdepth 1 -type d -mtime +30 -exec rm -rf {} \;
+echo "🧹 Cleaning up old local backups..." # This line was already in English
+
+# --- Cleanup by count ---
+# Keeps the N most recent backups defined in NUM_LOCAL_BACKUPS_TO_KEEP_BY_COUNT
+if [ "${NUM_LOCAL_BACKUPS_TO_KEEP_BY_COUNT}" -gt 0 ]; then
+  echo "  🔎 Keeping the ${NUM_LOCAL_BACKUPS_TO_KEEP_BY_COUNT} most recent local backups (by count)..."
+  # List directories by date (newest first), skip the top N, and remove the rest.
+  ls -1dt "${BACKUP_BASE}"/*/ 2>/dev/null | tail -n +$((NUM_LOCAL_BACKUPS_TO_KEEP_BY_COUNT + 1)) | xargs -d '\n' rm -rf || true
+else
+  echo "  ℹ️ Local backup cleanup by count is disabled (NUM_LOCAL_BACKUPS_TO_KEEP_BY_COUNT = ${NUM_LOCAL_BACKUPS_TO_KEEP_BY_COUNT})."
+fi
+
+# --- Cleanup by age ---
+# Removes backups older than N days defined in NUM_LOCAL_BACKUPS_TO_KEEP_BY_DAYS
+if [ "${NUM_LOCAL_BACKUPS_TO_KEEP_BY_DAYS}" -gt 0 ]; then
+  echo "  📆 Removing local backups older than ${NUM_LOCAL_BACKUPS_TO_KEEP_BY_DAYS} days..."
+  find "${BACKUP_BASE}" -mindepth 1 -maxdepth 1 -type d -mtime +${NUM_LOCAL_BACKUPS_TO_KEEP_BY_DAYS} -exec rm -rf {} \;
+else
+  echo "  ℹ️ Local backup cleanup by age is disabled (NUM_LOCAL_BACKUPS_TO_KEEP_BY_DAYS = ${NUM_LOCAL_BACKUPS_TO_KEEP_BY_DAYS})."
+fi
+
 
 # === Upload to Google Drive using rclone ===
 echo "☁️ Uploading to Google Drive (${GDRIVE_FOLDER})..."
@@ -124,21 +147,27 @@ fi
 
 echo "✅ Backup uploaded to cloud."
 
-# === Cleanup old backups in Google Drive ===
-echo "🧹 Cleaning up old remote backups (keeping 5 most recent)..."
+echo "🧹 Cleaning up old remote backups (keeping ${NUM_REMOTE_BACKUPS_TO_KEEP} most recent)..."
 REMOTE_DIR="${GDRIVE_REMOTE}:${GDRIVE_FOLDER}"
-mapfile -t old_dirs < <(
-  rclone lsd "$REMOTE_DIR" \
-    | sort -k2 -r \
-    | tail -n +11 \
-    | awk '{print $NF}'
+
+mapfile -t dirs_to_delete < <(
+  rclone lsf --dirs-only --format "p" "${REMOTE_DIR}" \
+    | sort -r \
+    | tail -n +$((NUM_REMOTE_BACKUPS_TO_KEEP + 1))
 )
 
-if [ ${#old_dirs[@]} -gt 0 ]; then
-  for dir in "${old_dirs[@]}"; do
-    echo "  🔥 Removing $REMOTE_DIR/$dir"
-    rclone purge "$REMOTE_DIR/$dir"
+if [ ${#dirs_to_delete[@]} -gt 0 ]; then
+  echo "🔍 Found ${#dirs_to_delete[@]} old remote backup(s) to delete:"
+  for dir_to_delete in "${dirs_to_delete[@]}"; do
+    # Make sure dir_to_delete is not empty or just "/"
+    if [[ -n "$dir_to_delete" && "$dir_to_delete" != "/" ]]; then
+      echo "  🔥 Removing ${REMOTE_DIR}/${dir_to_delete}"
+      rclone purge "${REMOTE_DIR}/${dir_to_delete}" --quiet # Añadí --quiet para consistencia con el upload
+    else
+      echo "  ⚠️ Skipping invalid directory name: '${dir_to_delete}'"
+    fi
   done
+  echo "✅ Remote cleanup completed."
 else
   echo "✅ No old remote backups to remove."
 fi
